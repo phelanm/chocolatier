@@ -1,5 +1,6 @@
 (ns chocolatier.engine.systems.events
-  (:require [chocolatier.utils.logging :refer [debug]]))
+  (:require [chocolatier.utils.logging :refer [debug]])
+  (:require-macros [chocolatier.engine.ces :refer [defsystem]]))
 
 ;; Anyone can send a message to the event bus
 ;; The event system distributes the events to any subscribers into
@@ -20,9 +21,9 @@
 
 
 (defn subscribe
-  "Subscribe to the given event. 
+  "Subscribe to the given event.
 
-   Multiple subscribe calls with the same event-id component-id entity-id 
+   Multiple subscribe calls with the same event-id component-id entity-id
    are idempotent.
 
    Example:
@@ -106,7 +107,7 @@
   (assoc-in state [:state :events] {:queue {} :subscriptions {}}))
 
 ;; TODO manage subscriptions here too
-(defn event-system
-  "Clear out events queue. Returns update game state."
+(defsystem event-system {}
+  ;; Clear out events queue. Returns update game state.
   [state]
   (clear-events-queue state))

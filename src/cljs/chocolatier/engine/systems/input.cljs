@@ -1,6 +1,7 @@
 (ns chocolatier.engine.systems.input
   (:require [chocolatier.utils.logging :refer [debug]]
-            [chocolatier.engine.utils.watchers :refer [hashmap-watcher]]))
+            [chocolatier.engine.utils.watchers :refer [hashmap-watcher]])
+  (:require-macros [chocolatier.engine.ces :refer [defsystem]]))
 
 
 (def *keyboard-input (atom nil))
@@ -16,8 +17,8 @@
     (swap! *keyboard-input assoc (keyword key) "off")))
 
 (defn init-input!
-  "Adds event listener to input events. Assoc's a removal function to 
-   the *keyboard-input"  
+  "Adds event listener to input events. Assoc's a removal function to
+   the *keyboard-input"
   []
   ;; Add js events for keyup and keydown
   (.addEventListener js/document "keydown" keydown)
@@ -39,8 +40,8 @@
         (f))))
   (init-input!))
 
-(defn input-system
-  "Update current user input"
+(defsystem input-system
+  {}
   [state]
   ;; Make sure the keyboard listener is hooked up
   (when-not @*keyboard-input (init-input!))

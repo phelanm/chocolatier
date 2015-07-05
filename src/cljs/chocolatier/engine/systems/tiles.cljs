@@ -2,7 +2,8 @@
   (:require [goog.net.XhrIo :as xhr]
             [chocolatier.utils.logging :as log]
             [chocolatier.engine.ces :as ces]
-            [chocolatier.engine.pixi :as pixi]))
+            [chocolatier.engine.pixi :as pixi])
+  (:require-macros [chocolatier.engine.ces :refer [defsystem]]))
 
 (defn screen-offset
   [m x y]
@@ -27,7 +28,7 @@
   "Adds a tile to the stage and returns the hashmap representation
    of a tile."
   [tileset-texture
-   width height 
+   width height
    map-x map-y ;; coords on the grid i.e 0,1
    screen-x screen-y ;; postiion on the screen
    tileset-x tileset-y ;; position on the tileset image
@@ -46,14 +47,14 @@
            attrs-hm)))
 
 (defn create-tiles-from-spec!
-  "Create tiles from a map-spec, a 1 dimensional array where the 
-   value of the item represents it's location in the tile set and 
+  "Create tiles from a map-spec, a 1 dimensional array where the
+   value of the item represents it's location in the tile set and
    the index of the item represents it's location in the tile map.
 
    Example of a 4 by 4 map spec:
    [0 1 2 0
     0 1 1 1
-    1 1 2 0 
+    1 1 2 0
     0 1 1 0]
 
     Args:
@@ -98,7 +99,7 @@
                 tileset-x (- (* tileset-w tile-px-w) (* tileset-col tile-px-w))
                 tileset-y (- (* tileset-h tile-px-h) (* tileset-row tile-px-h))
                 tile (create-tile! tileset-texture
-                                   tile-px-w tile-px-h 
+                                   tile-px-w tile-px-h
                                    map-row map-col
                                    map-x map-y
                                    tileset-x tileset-y)]
@@ -126,7 +127,7 @@
                   tileheight
                   tilewidth]} tilemap
                   {:keys [imageheight imagewidth]} (-> tilesets first)
-           tileset-width (/ imagewidth tilewidth) 
+           tileset-width (/ imagewidth tilewidth)
            tileset-height (/ imageheight tileheight)
            tileset-texture (pixi/mk-texture (-> tilesets first :image))]
       ;; Draw tiles from all layers of the tile map
@@ -153,8 +154,8 @@
                   (js->clj (.getResponseJson (.-target %))
                            :keywordize-keys true))))
 
-(defn tile-system
-  "Update the tile map"
+(defsystem tile-system {}
+  ;; Update the tile map
   [state]
   ;; TODO do something with tiles beyond drawing them once
   ;; (let [tiles (-> state :state :tiles)]

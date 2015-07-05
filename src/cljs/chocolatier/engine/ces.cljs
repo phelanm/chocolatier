@@ -1,7 +1,8 @@
 (ns chocolatier.engine.ces
   (:require [chocolatier.utils.logging :as log]
             [chocolatier.engine.systems.events :as ev])
-  (:require-macros [chocolatier.macros :refer [forloop local >> <<]]))
+  (:require-macros [chocolatier.macros :refer [forloop local >> <<]]
+                   [chocolatier.engine.ces :refer [defsystem]]))
 
 ;; Gameloop:   recursive function that calls all systems in a scene
 ;;
@@ -30,7 +31,7 @@
   (assoc-in state [:scenes uid] system-ids))
 
 (defn iter-fns
-  "Pass an initial value through a collection of functions with the 
+  "Pass an initial value through a collection of functions with the
    result of the function called is passed as an arg to the next
    function.
 
@@ -120,9 +121,9 @@
 (defn mk-component-fn
   "Returns a function that is called with game state and the entity id.
 
-   Wraps a component function so it is called with the entity id, 
+   Wraps a component function so it is called with the entity id,
    component state, and event inbox. Return value of f is wrapped in the
-   format-fn or update-component-state-and-events which returns an updated 
+   format-fn or update-component-state-and-events which returns an updated
    game state.
 
    The component function must take & args or & {:as sys-kwargs} so that
@@ -137,12 +138,12 @@
    argument is events that should be emitted. If format-fn is specified
    then you can implement whatever handling of results you want.
 
-   NOTE: The result of calling the component function must be an updated 
+   NOTE: The result of calling the component function must be an updated
    game state hashmap.
 
    Optional args:
    - options: Hashmap of options for a component function including:
-     - args-fn: will be called with global state, component-id, entity-id 
+     - args-fn: will be called with global state, component-id, entity-id
        and the results will be applied to the component function f. This
        allows custom arguments to get access to any state in the game.
        NOTE: must return a collection of arguments to be applied to f
@@ -193,44 +194,13 @@
     ;; TODO do we need a :fns keyword? there's no other data stored here
     (assoc-in state [:components uid] {:fns wrapped-fns})))
 
-(defn mk-system-fn
-  "Returns a function representing a system.
-
-   Has three arrities:
-   - [f] function f is called with state and returns updated game state
-   - [f component-id] function f is called with state, a collection of
-     component functions, and a collection of entity ids that match the
-     given component id. Return result is updated game state and inbox
-     messages are removed.
-   - [f component-id & more-ids] function f is called with state, a collection 
-     of component functions for component-id, and a collection of entity ids that 
-     match ALL given component ids. Return result is updated game state and inbox
-     messages are removed."
-  ([f]
-   (fn [state]
-     (f state)))
-  ([f component-id]
-   (fn [state]
-     (let [entities (entities-with-component state component-id)
-           component-fns (get-component-fns state component-id)]
-       (f state component-fns entities))))
-  ([f component-id & more-component-ids]
-   (fn [state]
-     (let [ids (conj more-component-ids component-id)
-           entities (entities-with-multi-components (:entities state) ids)
-           component-fns (get-component-fns state component-id)]
-       (f state component-fns entities)))))
-
 (defn mk-system
   "Add the system function to the state. Wraps the system function using
    mk-system-fn. Returns an update hashmap."
   [state uid f & [component-id]]
-  (log/debug "mk-system:" uid (when component-id
-                                (str "component-id: " component-id)))
-  (let [system-fn (if component-id
-                    (mk-system-fn f component-id)
-                    (mk-system-fn f))]
-    (assoc-in state [:systems uid] system-fn)))
+  (log/debug "mk-system:" uid
+             (when component-id (str "component-id: " component-id)))
+  (assoc-in state [:systems uid] f))
 
 (defn mk-entity
   "Adds entity with uid that has component-ids into state. Optionally pass
@@ -247,10 +217,10 @@
 
    Example:
    Create an entity with id :player1 with components and subscriptions.
-   (mk-entity {} 
+   (mk-entity {}
               :player1
               :components [:controllable
-                           [:collidable {:hit-radius 10}] 
+                           [:collidable {:hit-radius 10}]
                            :collision-debuggable
                            [:moveable {:x 0 :y 0}]]
               :subscriptions [[:player1 :move-change :player1]
